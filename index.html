@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>for miqqo</title>
+<style>
+body {
+    margin: 0;
+    background: radial-gradient(circle at center, #111018, #07070a);
+    color: #ff8fb1;
+    font-family: "Courier New", monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    overflow: hidden;
+}
+
+.container {
+    width: 90%;
+    max-width: 800px;
+    position: relative;
+    z-index: 2;
+}
+
+.scene {
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scene-text {
+    text-align: center;
+    font-family: "Courier New", monospace;
+    white-space: pre-wrap;
+    line-height: 1.4em;
+    font-size: 18px;
+    text-shadow: 0 0 8px #ff4f81;
+    min-height: 200px;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.heart {
+    font-size: 90px;
+    animation: pulse 1.5s infinite;
+    margin-top: 20px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+img {
+    max-width: 100%;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 0 30px rgba(255, 120, 160, 0.3);
+}
+
+button {
+    padding: 12px 30px;
+    background: #ff4f81;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 40px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px #ff4f81;
+    transition: 0.3s;
+    border: 1px solid #ffa0c0;
+    margin-top: 20px;
+}
+button:hover {
+    background: #ff2f61;
+    box-shadow: 0 0 30px #ff8fb1;
+    transform: scale(1.05);
+}
+#timer {
+    font-size: 24px;
+    margin-top: 20px;
+    color: #fff0f5;
+}
+
+/* LOADING SCREEN */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 20, 0.98);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    backdrop-filter: blur(8px);
+}
+
+.loading-text {
+    color: white;
+    font-size: 42px;
+    font-family: "Courier New", monospace;
+    margin-bottom: 40px;
+    text-shadow: 0 0 30px #ff4f81;
+    letter-spacing: 5px;
+    animation: textPulse 2s infinite;
+}
+
+@keyframes textPulse {
+    0% { opacity: 0.8; text-shadow: 0 0 20px #ff4f81; }
+    50% { opacity: 1; text-shadow: 0 0 50px #ff4f81, 0 0 100px white; }
+    100% { opacity: 0.8; text-shadow: 0 0 20px #ff4f81; }
+}
+
+.loading-bar-container {
+    width: 500px;
+    height: 30px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(255,79,129,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.loading-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff4f81, #ffb6c1, white);
+    border-radius: 30px;
+    transition: width 0.1s;
+    box-shadow: 0 0 30px #ff4f81;
+}
+
+.loading-percent {
+    color: white;
+    font-size: 28px;
+    margin-top: 25px;
+    font-family: "Courier New", monospace;
+    text-shadow: 0 0 15px #ff4f81;
+}
+
+/* INFINITY CONTAINER */
+.forever-container {
+    position: relative;
+    width: 700px;
+    height: 350px;
+    margin: 0 auto;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.forever-symbol {
+    font-size: 450px;
+    color: #ffffff;
+    text-shadow: 0 0 40px rgba(255,255,255,0.8), 0 0 80px rgba(255,255,255,0.5);
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+    font-weight: 200;
+    opacity: 0.95;
+    animation: glowPulse 3s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+    0% { text-shadow: 0 0 40px rgba(255,255,255,0.8), 0 0 80px rgba(255,255,255,0.4); }
+    50% { text-shadow: 0 0 70px rgba(255,255,255,1), 0 0 120px rgba(255,255,255,0.7), 0 0 180px #ff4f81; }
+    100% { text-shadow: 0 0 40px rgba(255,255,255,0.8), 0 0 80px rgba(255,255,255,0.4); }
+}
+
+/* Контейнер для звездных следов */
+.star-trail-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Сияющая точка (как падающая звезда) */
+.glowing-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    filter: drop-shadow(0 0 15px white) drop-shadow(0 0 30px #ffb6c1);
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 25px white;
+    animation: twinkle 0.5s infinite alternate;
+}
+
+@keyframes twinkle {
+    0% { opacity: 0.8; width: 6px; height: 6px; }
+    100% { opacity: 1; width: 10px; height: 10px; }
+}
+
+/* Аккуратный след */
+.elegant-trail {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    filter: drop-shadow(0 0 12px white) drop-shadow(0 0 20px #ffb6c1);
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Падающие звезды (фоновые) */
+.falling-star {
+    position: fixed;
+    color: white;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 0 15px white) drop-shadow(0 0 30px #ffb6c1);
+    animation: starFall linear forwards;
+}
+
+@keyframes starFall {
+    from {
+        transform: translateY(-10vh) rotate(0deg);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-text">LOVE LOADING...</div>
+    <div class="loading-bar-container">
+        <div class="loading-bar" id="loadingBar"></div>
+    </div>
+    <div class="loading-percent" id="loadingPercent">0%</div>
+</div>
+
+<div class="container">
+
+<button id="startBtn" onclick="startStory()">✨ Запустить нашу историю ✨</button>
+
+<!-- Сцены -->
+<div id="scene1" class="scene"><pre class="scene-text" id="scene1-text"></pre></div>
+<div id="scene2" class="scene"><pre class="scene-text" id="scene2-text"></pre><img src="soju.png" alt="Соджу"></div>
+<div id="scene3" class="scene" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <pre class="scene-text" id="scene3-text" style="margin-bottom: 40px;"></pre>
+    <img src="date.jpg" alt="Первое свидание" style="max-width: 450px; border-radius: 12px; margin-top: 10px;">
+</div>
+<div id="scene4" class="scene"><pre class="scene-text" id="scene4-text"></pre><p id="timer"></p><div class="heart">💗</div>
+    <button id="foreverBtn" onclick="initForever()" style="display:none;">🌌 Continue forever?</button>
+    
+    <!-- Контейнер для бесконечности -->
+    <div class="forever-container" id="infinityContainer">
+        <div class="forever-symbol">∞</div>
+        <div class="star-trail-container" id="starTrailContainer"></div>
+    </div>
+</div>
+
+<audio id="music" src="nefelibata.mp3"></audio>
+
+</div>
+
+<script>
+// ====================== Canvas и частицы ======================
+const canvas = document.getElementById("stars");
+const ctx = canvas.getContext("2d");
+let animationFrame;
+let particles = [];
+let mode = 0;
+let starShowerStarted = false;
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener("resize", resize);
+resize();
+
+function createParticles(count, type) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 3 + 1,
+            speedY: Math.random() * 0.5 + 0.2,
+            alpha: Math.random(),
+            speedAlpha: Math.random() * 0.02,
+            type: type,
+            targetType: type
+        });
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        if (p.type !== p.targetType) { 
+            p.type += (p.targetType - p.type) * 0.05; 
+        }
+
+        if (Math.round(p.type) === 1) {
+            p.y -= p.speedY; if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(255,120,160,${p.alpha})`;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
+        if (Math.round(p.type) === 2) {
+            p.y -= p.speedY; if (p.y < 0) p.y = canvas.height;
+            ctx.strokeStyle = `rgba(255,255,255,${p.alpha})`;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2); ctx.stroke();
+        }
+        if (Math.round(p.type) === 3) {
+            p.alpha += p.speedAlpha; if (p.alpha >= 1 || p.alpha <= 0) p.speedAlpha *= -1;
+            ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
+        if (Math.round(p.type) === 4) {
+            p.y -= p.speedY; if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(255,80,120,${p.alpha})`;
+            ctx.font = "18px Arial"; ctx.fillText("❤", p.x, p.y);
+        }
+        if (Math.round(p.type) === 5) {
+            p.y -= p.speedY * 0.2; 
+            if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(255,255,255,${p.alpha * 0.2})`;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+    });
+    animationFrame = requestAnimationFrame(animate);
+}
+
+function startEffect(newMode) {
+    mode = newMode;
+    particles.forEach(p => p.targetType = newMode);
+    createParticles(40, newMode);
+    canvas.style.opacity = "1";
+    if (!animationFrame) animate();
+}
+
+// ====================== Текст ======================
+const scenesText = {
+    scene1: [
+        "Booting emotional core...",
+        "Локация: Красное & Белое.",
+        "Я сразу обратил на тебя внимание.",
+        "Между нами как будто произошел дзынь.",
+        "И именно тогда всё началось.",
+        "Я написал первым — и это было лучшее решение."
+    ],
+    scene2: [
+        "Соджу сближает.",
+        "Кто бы мог подумать, что она станет началом нашей истории"
+    ],
+    scene3: [
+        "Наше первое свидание",
+        "Помню, как мы смотрели на звёзды.",
+        "Как время будто замедлилось.",
+        "И наш первый поцелуй под этим небом."
+    ],
+    scene4: [
+        "L+G ❤️",
+        "09.09.2025 — начало самой красивой главы моей жизни.",
+        "С 14 февраля, моя любовь.",
+        "Я выбираю тебя. Каждый день."
+    ]
+};
+
+function typeText(container, lines, callback) {
+    container.innerHTML = "";
+    let lineIndex = 0, charIndex = 0;
+    const cursor = "_";
+
+    function typeChar() {
+        if (lineIndex >= lines.length) {
+            container.innerHTML += cursor;
+            if (callback) setTimeout(callback, 800);
+            return;
+        }
+
+        const line = lines[lineIndex];
+        container.innerHTML = container.innerHTML.replace(cursor, "") + line[charIndex] + cursor;
+        charIndex++;
+        if (charIndex < line.length) {
+            setTimeout(typeChar, 50);
+        } else {
+            container.innerHTML = container.innerHTML.replace(cursor, "") + "\n" + cursor;
+            lineIndex++; charIndex = 0;
+            setTimeout(typeChar, 300);
+        }
+    }
+    typeChar();
+}
+
+// ====================== Сцены ======================
+const scenes = ["scene1", "scene2", "scene3", "scene4"];
+let current = 0;
+
+function showNextScene() {
+    if (current > 0) {
+        const prev = document.getElementById(scenes[current - 1]);
+        prev.classList.remove("show");
+    }
+    if (current < scenes.length) {
+        const next = document.getElementById(scenes[current]);
+        next.classList.add("show");
+
+        const sceneId = scenes[current];
+        const container = document.getElementById(sceneId + "-text");
+        
+        const isLastScene = (current === scenes.length - 1);
+        
+        typeText(container, scenesText[sceneId], () => {
+            if (isLastScene) {
+                setTimeout(() => {
+                    document.getElementById("foreverBtn").style.display = "inline-block";
+                }, 500);
+            } else {
+                setTimeout(showNextScene, 2000);
+            }
+        });
+
+        if (current === 0) startEffect(1);
+        if (current === 1) startEffect(2);
+        if (current === 2) startEffect(3);
+        if (current === 3) startEffect(4);
+
+        current++;
+    }
+}
+
+// ====================== LOVE LOADING ======================
+function showLoveLoading() {
+    return new Promise((resolve) => {
+        const loadingScreen = document.getElementById("loadingScreen");
+        const loadingBar = document.getElementById("loadingBar");
+        const loadingPercent = document.getElementById("loadingPercent");
+        
+        loadingScreen.style.display = "flex";
+        
+        let percent = 0;
+        const interval = setInterval(() => {
+            percent += 1;
+            loadingBar.style.width = percent + "%";
+            loadingPercent.textContent = percent + "%";
+            
+            if (percent >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    loadingScreen.style.display = "none";
+                    resolve();
+                }, 300);
+            }
+        }, 20);
+    });
+}
+
+// ====================== ФОНОВЫЕ ПАДАЮЩИЕ ЗВЕЗДЫ ======================
+function createFallingStar() {
+    const star = document.createElement("div");
+    star.className = "falling-star";
+    star.innerHTML = "✦";
+    star.style.left = Math.random() * 100 + "vw";
+    star.style.fontSize = (Math.random() * 20 + 15) + "px";
+    star.style.animationDuration = (Math.random() * 3 + 2) + "s";
+    star.style.opacity = Math.random() * 0.8 + 0.2;
+    document.body.appendChild(star);
+    
+    setTimeout(() => {
+        star.remove();
+    }, 5000);
+}
+
+// ====================== СИЯЮЩАЯ ТОЧКА ЛЕТИТ ПО СЕРДЦУ ======================
+function createGlowingHeartPath() {
+    const container = document.getElementById("starTrailContainer");
+    const infinityContainer = document.getElementById("infinityContainer");
+    
+    const width = infinityContainer.clientWidth;
+    const height = infinityContainer.clientHeight;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Случайно выбираем левую или правую сторону
+    const side = Math.random() > 0.5 ? -1 : 1;
+    
+    // Создаем сияющую точку
+    const dot = document.createElement("div");
+    dot.className = "glowing-dot";
+    container.appendChild(dot);
+    
+    // Параметры анимации
+    let progress = 0;
+    const duration = 6000;
+    const startTime = performance.now();
+    
+    // Массив для элегантного следа
+    const trail = [];
+    const trailLength = 80;
+    
+    function animate() {
+        const elapsed = performance.now() - startTime;
+        progress = Math.min(elapsed / duration, 1);
+        
+        const t = progress * Math.PI * 2;
+        const scale = 200;
+        const x = centerX + side * scale * (16 * Math.pow(Math.sin(t), 3)) / 16;
+        const y = centerY - scale * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 16;
+        
+        dot.style.left = x + "px";
+        dot.style.top = y + "px";
+        
+        if (progress < 0.97) {
+            const trailPoint = document.createElement("div");
+            trailPoint.className = "elegant-trail";
+            trailPoint.style.left = x + "px";
+            trailPoint.style.top = y + "px";
+            trailPoint.style.opacity = "0.9";
+            trailPoint.style.width = (4 + (1 - progress) * 6) + "px";
+            trailPoint.style.height = (4 + (1 - progress) * 6) + "px";
+            trailPoint.style.background = "white";
+            trailPoint.style.boxShadow = "0 0 20px white, 0 0 40px #ffb6c1";
+            container.appendChild(trailPoint);
+            
+            trail.push(trailPoint);
+            
+            if (trail.length > trailLength) {
+                const oldestTrail = trail.shift();
+                oldestTrail.style.opacity = "0";
+                oldestTrail.style.transition = "opacity 0.5s";
+                setTimeout(() => oldestTrail.remove(), 500);
+            }
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            dot.style.opacity = "0";
+            dot.style.transition = "opacity 0.5s";
+            setTimeout(() => dot.remove(), 500);
+            
+            trail.forEach((t, index) => {
+                setTimeout(() => {
+                    t.style.opacity = "0";
+                    t.style.transition = "opacity 0.5s";
+                    setTimeout(() => t.remove(), 500);
+                }, index * 20);
+            });
+        }
+    }
+    
+    animate();
+}
+
+// ====================== ЗАПУСК ======================
+function startStarShower() {
+    if (starShowerStarted) return;
+    starShowerStarted = true;
+    
+    // Очищаем контейнер перед стартом
+    const container = document.getElementById("starTrailContainer");
+    container.innerHTML = '';
+    
+    // Запускаем первую точку через 2 секунды
+    setTimeout(() => {
+        createGlowingHeartPath();
+    }, 2000);
+    
+    // Запускаем новые точки каждые 10-14 секунд
+    setInterval(() => {
+        createGlowingHeartPath();
+    }, 10000 + Math.random() * 4000);
+    
+    // Фоновые падающие звезды
+    setInterval(createFallingStar, 1500);
+}
+
+// ====================== FOREVER ======================
+async function initForever() {
+    // СНАЧАЛА показываем загрузку (фон с сердечками еще виден)
+    const loadingPromise = showLoveLoading();
+    
+    // НЕМЕДЛЕННО прячем всё из 4 сцены
+    document.getElementById("foreverBtn").style.display = "none";
+    document.getElementById("timer").style.display = "none";
+    document.getElementById("scene4-text").style.display = "none";
+    document.querySelector("#scene4 .heart").style.display = "none";
+    
+    // Теперь ждем загрузку
+    await loadingPromise;
+    
+    // Показываем контейнер с бесконечностью
+    const container = document.getElementById("infinityContainer");
+    container.style.display = "flex";
+    
+    // Очищаем возможные старые эффекты
+    const trailContainer = document.getElementById("starTrailContainer");
+    trailContainer.innerHTML = '';
+    
+    // Сбрасываем флаг
+    starShowerStarted = false;
+    
+    // Легкий эффект частиц
+    startEffect(5);
+    
+    // Запускаем звездное шоу
+    setTimeout(() => {
+        startStarShower();
+    }, 500);
+}
+
+// ====================== Старт ======================
+function startStory() {
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("music").play().catch(() => {});
+    document.getElementById("infinityContainer").style.display = "none";
+    showNextScene();
+}
+
+// ====================== Таймер ======================
+const startDate = new Date("2025-09-09");
+function updateTimer() {
+    const now = new Date();
+    const diff = now - startDate;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
+    document.getElementById("timer").innerHTML = `Мы вместе уже ${days} дней и ${hours} часов 💕`;
+}
+setInterval(updateTimer, 1000);
+updateTimer();
+
+animate();
+</script>
+</body>
+</html>
